@@ -24,7 +24,7 @@
 
 	Return the greatest integer of the given 'a' and 'b'.
 */
-int64_t max(int64_t a, int64_t b) {
+static int64_t max(int64_t a, int64_t b) {
 	if (a < b) {
 		return b;
 	}

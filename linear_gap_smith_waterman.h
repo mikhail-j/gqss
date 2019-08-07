@@ -26,13 +26,6 @@
 #include <assert.h>
 
 /*
-	max(int64_t a, int64_t b)
-
-	Return the greatest integer of the given 'a' and 'b'.
-*/
-int64_t max(int64_t a, int64_t b);
-
-/*
 	best_linear_gap_smith_waterman_score(int64_t left, int64_t up_left, int64_t up, char a, char b, int64_t (*get_substitution_matrix_value)(char a, char b), int64_t gap_penalty)
 
 	best_linear_gap_smith_waterman_score() returns the best possible score for an element of the scoring matrix based on the
