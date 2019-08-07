@@ -62,7 +62,7 @@ int main(int argc, char* argv[]) {
 	assert(best_linear_gap_smith_waterman_score_indices(strlen(a), strlen(b), scores, &best_i, &best_j));
 
 	//print the matrix indices of the highest score encountered within the matrix
-	printf("Best Indices: (%lld, %lld)\n", best_i, best_j);
+	printf("Best Indices: (%llu, %llu)\n", (uint64_t)best_i, (uint64_t)best_j);
 
 	//allocate C string allocations to store our sequence alignments
 	char* trace_a = (char *)malloc((best_i + best_j + 3) * sizeof(char));
