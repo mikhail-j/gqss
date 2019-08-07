@@ -70,8 +70,6 @@ void linear_gap_smith_waterman(char* seq_X, char* seq_Y, int64_t* scores, int64_
 												scores[((i - 1) * len_Y) + j],
 												seq_X[i],
 												seq_Y[j], get_substitution_matrix_value, gap_penalty);
-//			printf("%lld ", scores[((i - 1) * len_Y) + j - 1]);
-//			printf("\n");
 		}
 	}
 	return;
@@ -171,7 +169,6 @@ void trace_linear_gap_smith_waterman(char* seq_X, char* seq_Y, int64_t* Z, char*
 			alignment_index++;
 		}
 		else {
-			//printf("i: %lld | j: %lld | Z[i, j]: %lld | alignment length: %lld\n", current_i, current_j, Z[(current_i * len_Y) + current_j], alignment_index);
 			//we shouldn't reach here!
 			assert(false);
 		}
@@ -179,7 +176,6 @@ void trace_linear_gap_smith_waterman(char* seq_X, char* seq_Y, int64_t* Z, char*
 
 	size_t alignment_length = alignment_index + 1;
 
-//	printf("alignment length: %lld\n", alignment_length);
 	trace_X[alignment_length] = '\0';
 	trace_Y[alignment_length] = '\0';
 
