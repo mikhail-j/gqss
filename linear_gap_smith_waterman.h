@@ -54,6 +54,6 @@ bool best_linear_gap_smith_waterman_score_indices(size_t len_X, size_t len_Y, in
 	trace_linear_gap_smith_waterman() expects a matrix scored by the Smith-Waterman algorithm. The strings 'trace_X' and 'trace_Y'
 	should be given alignment 'char *' allocations of size (length(X) + length(Y) + 1) for worst case (triangle inequality)
 */
-void trace_linear_gap_smith_waterman(char* seq_X, char* seq_Y, int64_t* Z, char* trace_X, char* trace_Y, size_t x, size_t y, int64_t (*get_substitution_matrix_value)(char a, char b), int64_t gap_penalty);
+void trace_linear_gap_smith_waterman(char* seq_X, char* seq_Y, int64_t* Z, char* trace_X, char* trace_Y, size_t* x, size_t* y, int64_t (*get_substitution_matrix_value)(char a, char b), int64_t gap_penalty);
 
 #endif /* GQSS_LINEAR_GAP_SMITH_WATERMAN_H */

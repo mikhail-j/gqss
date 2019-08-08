@@ -68,7 +68,10 @@ int main(int argc, char* argv[]) {
 	char* trace_a = (char *)malloc((best_i + best_j + 3) * sizeof(char));
 	char* trace_b = (char *)malloc((best_i + best_j + 3) * sizeof(char));
 
-	trace_linear_gap_smith_waterman(a, b, scores, trace_a, trace_b, best_i, best_j, get_example_substitution, LINEAR_GAP_PENALTY);
+	trace_linear_gap_smith_waterman(a, b, scores, trace_a, trace_b, &best_i, &best_j, get_example_substitution, LINEAR_GAP_PENALTY);
+
+	//print in-place updated matrix indices
+	printf("Best Indices: (%llu, %llu)\n", (uint64_t)best_i, (uint64_t)best_j);
 
 	//print sequence alignments obtained from our traceback step
 	printf("Alignments:\n%s\n%s\n", trace_a, trace_b);
