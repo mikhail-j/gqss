@@ -49,7 +49,7 @@ static const char HELP_STRING[] = (
 	"substitution matrix on the given sequences found in the FASTA and FASTQ files.\n\n"
 	"Examples:\n"
 	"  ednafull_linear_smith_waterman -q gene.fasta reads.fastq\n"
-	"  ednafull_linear_smith_waterman -q gene.fasta -p 10 reads.fastq\n"
+	"  ednafull_linear_smith_waterman -q gene.fasta -P 10 reads.fastq\n"
 	"\n"
 	"Options:\n"
 	"  -q, --query=FILE            specify query sequence (FASTA format)\n"

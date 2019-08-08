@@ -120,10 +120,8 @@ void trace_linear_gap_smith_waterman(char* seq_X, char* seq_Y, int64_t* Z, char*
 	assert(((len_X > 0) && (len_Y > 0)));
 
 
-	int64_t score = Z[(*x * len_Y) + *y];
+	int64_t score = Z[((*x) * len_Y) + (*y)];
 
-//	size_t current_i = x;
-//	size_t current_j = y;
 	size_t alignment_index = 0;
 
 	//we should break when we see the next match is 0
@@ -135,35 +133,35 @@ void trace_linear_gap_smith_waterman(char* seq_X, char* seq_Y, int64_t* Z, char*
 		}
 
 		//check left, top/left, top cells
-		if (Z[((*x * len_Y) + *y - 1)] - gap_penalty == Z[(*x * len_Y) + *y]) {
+		if (Z[((*x * len_Y) + *y - 1)] - gap_penalty == Z[((*x) * len_Y) + (*y)]) {
 			trace_X[alignment_index] = '-';
 			trace_Y[alignment_index] = seq_Y[*y];
 
-			score = Z[((*x * len_Y) + *y - 1)];
+			score = Z[(((*x) * len_Y) + (*y) - 1)];
 
 			*y = *y - 1;
 			alignment_index++;
 		}
-		else if (Z[(((*x - 1) * len_Y) + (*y - 1))] + get_substitution_matrix_value(seq_X[*x], seq_Y[*y]) == Z[(*x * len_Y) + *y]) {
+		else if (Z[((((*x) - 1) * len_Y) + ((*y) - 1))] + get_substitution_matrix_value(seq_X[*x], seq_Y[*y]) == Z[((*x) * len_Y) + (*y)]) {
 			trace_X[alignment_index] = seq_X[*x];
 			trace_Y[alignment_index] = seq_Y[*y];
 
 			//check if next diagonal cell is zero
-			if (Z[((*x - 1) * len_Y) + (*y - 1)] == 0) {
+			if (Z[(((*x) - 1) * len_Y) + ((*y) - 1)] == 0) {
 				break;
 			}
 
-			score = Z[(((*x - 1) * len_Y) + (*y - 1))];
+			score = Z[((((*x) - 1) * len_Y) + ((*y) - 1))];
 
 			*x = *x - 1;
 			*y = *y - 1;
 			alignment_index++;
 		}
-		else if (Z[(((*x - 1) * len_Y) + *y)] - gap_penalty == Z[(*x * len_Y) + *y]) {
+		else if (Z[((((*x) - 1) * len_Y) + *y)] - gap_penalty == Z[((*x) * len_Y) + *y]) {
 			trace_X[alignment_index] = seq_X[*x];
 			trace_Y[alignment_index] = '-';
 
-			score = Z[(((*x - 1) * len_Y) + *y)];
+			score = Z[((((*x) - 1) * len_Y) + (*y))];
 
 			*x = *x - 1;
 			alignment_index++;
