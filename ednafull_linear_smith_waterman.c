@@ -512,11 +512,11 @@ void handle_fastq(char* fastq_filename, char* fastq_data, char* query_sequence_i
 				sequence_id = NULL;
 
 				if (!(line_count % 0x03ff)) {
-					//checkpoint after 1024 sequences
+					//checkpoint after (1024 / 4) = 256 sequences
 					assert(clock_gettime(CLOCK_MONOTONIC, &current_time) == 0);
 					time_elapsed = compute_time_elapsed(&start_time, &current_time);
 		
-					printf("[%11.2lf seconds]: %lld sequences parsed\n", time_elapsed, line_count);
+					printf("[%11.2lf seconds]: %lld sequences parsed\n", time_elapsed, line_count >> 2);
 				}
 			}
 			//else {}//ignore the third line
@@ -534,7 +534,7 @@ void handle_fastq(char* fastq_filename, char* fastq_data, char* query_sequence_i
 	assert(clock_gettime(CLOCK_MONOTONIC, &current_time) == 0);
 	time_elapsed = compute_time_elapsed(&start_time, &current_time);
 	
-	printf("[%11.2lf seconds]: %lld sequences parsed\n", time_elapsed, line_count);
+	printf("[%11.2lf seconds]: %lld sequences parsed\n", time_elapsed, line_count >> 2);
 
 	return;
 }
