@@ -55,9 +55,9 @@ static char * get_first_string_token_space_delimited(char* s) {
 	}
 	if (!found_first_space) {
 		//return given string 's', no space character was found
-		char* token = (char *)malloc(strlen(s) * sizeof(char));
+		char* token = (char *)malloc((strlen(s) + 1) * sizeof(char));
 		if (token == NULL) {
-			perror("get_first_string_token(): malloc(): error");
+			perror("get_first_string_token_space_delimited(): malloc(): error");
 
 			return NULL;
 		}
@@ -69,7 +69,7 @@ static char * get_first_string_token_space_delimited(char* s) {
 	else {
 		char* token = (char *)malloc((first_space_character + 1) * sizeof(char));
 		if (token == NULL) {
-			perror("get_first_string_token(): malloc(): error");
+			perror("get_first_string_token_space_delimited(): malloc(): error");
 
 			return NULL;
 		}
@@ -528,6 +528,6 @@ char* generate_int_linear_gap_penalty_pair_alignment(char* substitution_matrix_n
 	free(query_sequence_id_token);
 	free(sequence_id_token);
     free(time_string);
-
+    
 	return pair_allocation;
 }
