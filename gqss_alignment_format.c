@@ -302,7 +302,7 @@ char* generate_int_linear_gap_penalty_pair_alignment(char* program_name, char* s
 			"# Identity:   %20llu/%llu (%.1f%%)\n"				//14 + 20 + 1 + 20 + 1 + 1 + 6 + 1 + 1 = 14 + 42 + 9 = 65
 			"# Similarity: %20llu/%llu (%.1f%%)\n"				//14 + 20 + 1 + 20 + 1 + 1 + 6 + 1 + 1 = 14 + 42 + 9 = 65
 			"# Gaps:       %20llu/%llu (%.1f%%)\n"				//14 + 20 + 1 + 20 + 1 + 1 + 6 + 1 + 1 = 14 + 42 + 9 = 65
-			"# Mismatchs:  %20llu/%llu (%.1f%%)\n"				//14 + 20 + 1 + 20 + 1 + 1 + 6 + 1 + 1 = 14 + 42 + 9 = 65
+			"# Mismatches: %20llu/%llu (%.1f%%)\n"				//14 + 20 + 1 + 20 + 1 + 1 + 6 + 1 + 1 = 14 + 42 + 9 = 65
 			"# Score: %" PRId64 "\n",							//9 + length(typemin(Int64)) + 1 = 9 + 20 + 1 = 30
 			identicals, alignment_length, (((double)identicals)/((double)alignment_length) * 100.0),
 			identicals, alignment_length, (((double)identicals)/((double)alignment_length) * 100.0),

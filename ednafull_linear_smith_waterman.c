@@ -293,6 +293,50 @@ static double compute_time_elapsed(struct timespec* t1, struct timespec* t2) {
 }
 
 /*
+	count_mismatches(char* trace_X, char* trace_Y, uint64_t* identical, uint64_t* gaps_X, uint64_t* gaps_Y, uint64_t* mismatches)
+
+	count_mismatches() counts the number of mismatches and gaps found between the 2 given sequences ('trace_X' and 'trace_Y'). The
+	resulting number of mismatches found is assigned to 'mismatches'. In addition, the number of gaps corresponding to 'trace_X' and
+	'trace_Y' are assigned to 'gaps_X' and 'gaps_Y' respectively.
+*/
+static void count_mismatches(char* trace_X, char* trace_Y, uint64_t* identical, uint64_t* gaps_X, uint64_t* gaps_Y, uint64_t* mismatches) {
+	assert((trace_X != NULL) && (trace_Y != NULL));
+	assert(strlen(trace_X) == strlen(trace_Y));
+
+	*identical = 0;
+	*gaps_X = 0;
+	*gaps_Y = 0;
+	*mismatches = 0;
+
+	for (size_t i = 0; i < strlen(trace_X); i++) {
+		if (trace_X[i] == trace_Y[i]) {
+			if (trace_X[i] == '-') {
+				//both bases in 'trace_X' in 'trace_Y' are gaps
+				*gaps_X = (*gaps_X) + 1;
+				*gaps_Y = (*gaps_Y) + 1;
+
+				*mismatches = (*mismatches) + 1;
+			}
+			else {
+				*identical = (*identical) + 1;
+			}
+		}
+		else {
+			if (trace_X[i] == '-') {
+				*gaps_X = (*gaps_X) + 1;
+			}
+			else if (trace_Y[i] == '-') {
+				*gaps_Y = (*gaps_Y) + 1;
+			}
+			
+			*mismatches = (*mismatches) + 1;
+		}
+	}
+
+	return;
+}
+
+/*
 	void handle_fastq_tsv(char* fastq_filename, char* fastq_data, char* query_sequence_identifier, char* query_sequence, int64_t gap_penalty)
 
 	handle_fastq_tsv() parses the FASTQ file and writes the results in a tab delimited values file format (TSV).
@@ -325,6 +369,11 @@ void handle_fastq_tsv(char* fastq_filename, char* fastq_data, char* query_sequen
 	size_t query_sequence_stop;
 	size_t sequence_start;
 	size_t sequence_stop;
+
+	uint64_t identicals;
+	uint64_t gaps_X;
+	uint64_t gaps_Y;
+	uint64_t mismatches;
 
 	//keep track of FASTQ format row as a variable
 	size_t sequence_row;
@@ -362,7 +411,7 @@ void handle_fastq_tsv(char* fastq_filename, char* fastq_data, char* query_sequen
 	assert(clock_gettime(CLOCK_MONOTONIC, &start_time) == 0);
 
 	//write the .tsv header (column descriptions) to file
-	fprintf(file_fd, "%s", "Reference Sequence Identifier\tSequence Identifier\tSmith-Waterman Score\tLinear Gap Penalty\tSubstitution Matrix\tReference Sequence Alignment\tSequence Alignment\tSequence Alignment Base Quality\n");
+	fprintf(file_fd, "%s", "Reference Sequence Identifier\tSequence Identifier\tSmith-Waterman Score\tLinear Gap Penalty\tSubstitution Matrix\tAlignment Length\tAlignment Identities\tAlignment Gaps\tAlignment Mismatches\tReference Sequence Alignment\tSequence Alignment\tSequence Alignment Base Quality\n");
 	if(ferror(file_fd)) {
 		perror("handle_fastq_tsv(): fprintf(): error");
 
@@ -411,13 +460,21 @@ void handle_fastq_tsv(char* fastq_filename, char* fastq_data, char* query_sequen
 			
 				memcpy(alignment_phred_scores, (phred_scores + sequence_start), (alignment_phred_scores_length * sizeof(char)));
 				
+
+				//count the number of mismatches and gaps found between 'sequence_alignment' and 'query_sequence_alignment'
+				count_mismatches(sequence_alignment, query_sequence_alignment, &identicals, &gaps_X, &gaps_Y, &mismatches);
+
 				//format the row output before writing to file
-				fprintf(file_fd, "%s\t%s\t%lld\t%lld\t%s\t%s\t%s\t%s\n",
+				fprintf(file_fd, "%s\t%s\t%lld\t%lld\t%s\t%llu\t%llu\t%llu\t%llu\t%s\t%s\t%s\n",
 								(query_sequence_identifier + 1),
 								sequence_id,
 								smith_waterman_score,
 								gap_penalty,
 								"NUC4.4",
+								strlen(sequence_alignment),
+								identicals,
+								(gaps_X + gaps_Y),
+								mismatches,
 								sequence_alignment,
 								query_sequence_alignment,
 								alignment_phred_scores);
@@ -461,13 +518,20 @@ void handle_fastq_tsv(char* fastq_filename, char* fastq_data, char* query_sequen
 				
 				memcpy(alignment_phred_scores, (phred_scores + sequence_start), (alignment_phred_scores_length * sizeof(char)));
 				
+				//count the number of mismatches and gaps found between 'sequence_alignment' and 'query_sequence_alignment'
+				count_mismatches(sequence_alignment, query_sequence_alignment, &identicals, &gaps_X, &gaps_Y, &mismatches);
+
 				//format the row output before writing to file
-				fprintf(file_fd, "Reverse_Complement_%s\t%s\t%lld\t%lld\t%s\t%s\t%s\t%s\n",
+				fprintf(file_fd, "Reverse_Complement_%s\t%s\t%lld\t%lld\t%s\t%llu\t%llu\t%llu\t%llu\t%s\t%s\t%s\n",
 								(query_sequence_identifier + 1),
 								sequence_id,
 								smith_waterman_score,
 								gap_penalty,
 								"NUC4.4",
+								strlen(sequence_alignment),
+								identicals,
+								(gaps_X + gaps_Y),
+								mismatches,
 								sequence_alignment,
 								query_sequence_alignment,
 								alignment_phred_scores);
