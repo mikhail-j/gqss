@@ -897,7 +897,7 @@ int main(int argc, char* argv[]) {
 	int64_t gap_penalty = 16;
 	char* sequence_filename;
 	char* query_sequence_filename;
-	int output_flag;
+	unsigned int output_flag;
 
 	int parse_status = parse_ednafull_linear_smith_waterman_options(argc, argv, &query_sequence_filename, &sequence_filename, &gap_penalty, &output_flag);
 	
