@@ -30,22 +30,26 @@
 #include <assert.h>
 
 /*
-	generate_int_linear_gap_penalty_pair_alignment(char* substitution_matrix_name, char* query_sequence_identifier, char* sequence_identifier, char* trace_X, char* trace_Y, int64_t score, int64_t gap_penalty)
+	generate_int_linear_gap_penalty_pair_alignment(char* program_name, char* substitution_matrix_name, char* query_sequence_identifier, char* sequence_identifier, char* trace_X, char* trace_Y, int64_t score, int64_t gap_penalty)
 	
 	generate_int_linear_gap_penalty_pair_alignment() returns a formatted pair alignment as a newly allocated C string. The function assumes the alignment's
 	linear gap penalty is an integer value.
 	
-	generate_int_linear_gap_penalty_pair_alignment() will return a NULL pointer if it encounters errors or errorneously formatted function arguments.
-
+	generate_int_linear_gap_penalty_pair_alignment() will return a NULL pointer if it encounters errors or errorneously formatted function arguments. 
+	
 	The length of the returned C string was computed using the following numbers:
 
 	Start of Header
-	41 + 43 + 37 + 22 + 41 + 41 = (3 x 41) + (43 + 37) + 22 = 123 + 80 + 22 = 123 + 102 = 225
+	41 + 13 + strlen(program_name) + 37 + 22 + 41 + 41
+	= (3 x 41) + (13 + 37) + 22 + strlen(program_name)
+	= 123 + 50 + 22 + strlen(program_name)
+	= 123 + 72 + strlen(program_name)
+	= 195 + strlen(program_name)
 	
 	Aligned Sequence Names
-	(2 + 23 + 5 + strlen(sequence_id_token + 1) + 1) + (5 + strlen(query_sequence_identifier) + 1)
-	= (31 + strlen(sequence_id_token + 1)) + (6 + strlen(query_sequence_identifier))
-	= 37 + strlen(sequence_id_token + 1) + strlen(query_sequence_identifier)
+	(2 + 23 + 5 + strlen(sequence_id_token + 1) + 1) + (5 + strlen(query_sequence_id_token + 1) + 1)
+	= (31 + strlen(sequence_id_token + 1)) + (6 + strlen(query_sequence_id_token + 1))
+	= 37 + strlen(sequence_id_token + 1) + strlen(query_sequence_id_token + 1)
 	
 	Substitution Matrix name
 	10 + strlen(substitution_matrix_name) + 1 = 11 + strlen(substitution_matrix_name)
@@ -59,7 +63,7 @@
 	End of Header
 	2 + 2 + 41 = 4 + 41 = 45
 	
-	max_seq_id = max(strlen(sequence_id_token + 1), strlen(query_sequence_identifier))
+	max_seq_id = max(strlen(sequence_id_token + 1), strlen(query_sequence_id_token + 1))
 
 	Section Structure
 			2 newline characters			//2
@@ -83,6 +87,6 @@
 	Null Character
 	1
 */
-char* generate_int_linear_gap_penalty_pair_alignment(char* substitution_matrix_name, char* query_sequence_identifier, char* sequence_identifier, char* trace_X, char* trace_Y, int64_t score, int64_t gap_penalty);
+char* generate_int_linear_gap_penalty_pair_alignment(char* program_name, char* substitution_matrix_name, char* query_sequence_identifier, char* sequence_identifier, char* trace_X, char* trace_Y, int64_t score, int64_t gap_penalty);
 
 #endif /* GQSS_ALIGNMENT_FORMAT_H */

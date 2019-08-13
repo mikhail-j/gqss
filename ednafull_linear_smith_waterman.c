@@ -18,24 +18,12 @@
  * Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301, USA.
  */
 
-
-#include "linear_gap_smith_waterman.h"
-#include "gqss_file_io.h"
-
-#include <stdint.h>
-#include <stdio.h>
-#include <string.h>
-#include <stdlib.h>
-
-#include <stdbool.h>
-#include <time.h>
-
-#include <unistd.h>
-#include <getopt.h>
+#include "ednafull_linear_smith_waterman.h"
 
 static const struct option getopt_long_options[] = {
 	{"query", required_argument, NULL, 'q'},
 	{"gap-penalty", required_argument, NULL, 'P'},
+	{"type", required_argument, NULL, 0},
 	{"help", no_argument, NULL, 'h'},
 	{"version", no_argument, NULL, 'v'},
 	{ NULL, 0, NULL, 0}
@@ -50,10 +38,12 @@ static const char HELP_STRING[] = (
 	"Examples:\n"
 	"  ednafull_linear_smith_waterman -q gene.fasta reads.fastq\n"
 	"  ednafull_linear_smith_waterman -q gene.fasta -P 10 reads.fastq\n"
+	"  ednafull_linear_smith_waterman -q gene.fasta --type=pair reads.fastq\n"
 	"\n"
 	"Options:\n"
 	"  -q, --query=FILE            specify query sequence (FASTA format)\n"
 	"  -P, --gap-penalty=INT       specify linear gap penalty (default value is 16)\n"
+	"  --type=TYPE                 specify output format: 'tsv' (default) or 'pair'\n"
 	"  -h, --help                  print this help and exit\n"
 	"  --version                   print version information and exit\n"
 	);
@@ -303,11 +293,11 @@ static double compute_time_elapsed(struct timespec* t1, struct timespec* t2) {
 }
 
 /*
-	void handle_fastq(char* fastq_filename, char* fastq_data, char* query_sequence_identifier, char* query_sequence, int64_t gap_penalty)
+	void handle_fastq_tsv(char* fastq_filename, char* fastq_data, char* query_sequence_identifier, char* query_sequence, int64_t gap_penalty)
 
-	handle_fastq() parses the FASTQ file and writes the results in a tab delimited values file format (TSV).
+	handle_fastq_tsv() parses the FASTQ file and writes the results in a tab delimited values file format (TSV).
 */
-void handle_fastq(char* fastq_filename, char* fastq_data, char* query_sequence_identifier, char* query_sequence, int64_t gap_penalty) {
+void handle_fastq_tsv(char* fastq_filename, char* fastq_data, char* query_sequence_identifier, char* query_sequence, int64_t gap_penalty) {
 	assert(fastq_filename != NULL);
 
 	size_t total_bytes = strlen(fastq_data);
@@ -341,7 +331,7 @@ void handle_fastq(char* fastq_filename, char* fastq_data, char* query_sequence_i
 
 	char* new_filename = (char *)malloc((strlen(fastq_filename) + 8) * sizeof(char));
 	if (new_filename == NULL) {
-		perror("error: handle_fastq(): malloc()");
+		perror("handle_fastq_tsv(): malloc(): error");
 
 		//immediately exit
 		exit(1);
@@ -355,7 +345,7 @@ void handle_fastq(char* fastq_filename, char* fastq_data, char* query_sequence_i
 
 	FILE* file_fd = fopen(new_filename, "wb");
 	if (file_fd == NULL) {
-		perror("error: handle_fastq(): fopen()");
+		perror("handle_fastq_tsv(): fopen(): error");
 
 		//immediately exit
 		exit(2);
@@ -374,7 +364,7 @@ void handle_fastq(char* fastq_filename, char* fastq_data, char* query_sequence_i
 	//write the .tsv header (column descriptions) to file
 	fprintf(file_fd, "%s", "Reference Sequence Identifier\tSequence Identifier\tSmith-Waterman Score\tLinear Gap Penalty\tSubstitution Matrix\tReference Sequence Alignment\tSequence Alignment\tSequence Alignment Base Quality\n");
 	if(ferror(file_fd)) {
-		perror("error: handle_fastq(): fprintf()");
+		perror("handle_fastq_tsv(): fprintf(): error");
 
 		fclose(file_fd);
 
@@ -412,7 +402,7 @@ void handle_fastq(char* fastq_filename, char* fastq_data, char* query_sequence_i
 				alignment_phred_scores_length = (sequence_stop - sequence_start) + 1;
 				alignment_phred_scores = (char *)malloc((alignment_phred_scores_length + 1) * sizeof(char));
 				if (alignment_phred_scores == NULL) {
-					perror("error: handle_fastq(): malloc()");
+					perror("handle_fastq_tsv(): malloc(): error");
 			
 					//immediately exit
 					exit(1);
@@ -432,7 +422,7 @@ void handle_fastq(char* fastq_filename, char* fastq_data, char* query_sequence_i
 								query_sequence_alignment,
 								alignment_phred_scores);
 				if(ferror(file_fd)) {
-					perror("error: handle_fastq(): fprintf()");
+					perror("handle_fastq_tsv(): fprintf(): error");
 			
 					fclose(file_fd);
 			
@@ -462,7 +452,7 @@ void handle_fastq(char* fastq_filename, char* fastq_data, char* query_sequence_i
 				alignment_phred_scores_length = (sequence_stop - sequence_start) + 1;
 				alignment_phred_scores = (char *)malloc((alignment_phred_scores_length + 1) * sizeof(char));
 				if (alignment_phred_scores == NULL) {
-					perror("error: handle_fastq(): malloc()");
+					perror("handle_fastq_tsv(): malloc(): error");
 				
 					//immediately exit
 					exit(1);
@@ -482,7 +472,7 @@ void handle_fastq(char* fastq_filename, char* fastq_data, char* query_sequence_i
 								query_sequence_alignment,
 								alignment_phred_scores);
 				if(ferror(file_fd)) {
-					perror("error: handle_fastq(): fprintf()");
+					perror("handle_fastq_tsv(): fprintf(): error");
 			
 					fclose(file_fd);
 				
@@ -540,12 +530,270 @@ void handle_fastq(char* fastq_filename, char* fastq_data, char* query_sequence_i
 }
 
 /*
+	char * get_first_string_token_space_delimited(char* s)
+
+	get_first_string_token_space_delimited() returns a newly allocated C string with the first token
+	found by delimiting by the space character (' '). Otherwise, return NULL pointer.
+*/
+static char * get_first_string_token_space_delimited(char* s) {
+	if (s == NULL) {
+		return NULL;
+	}
+
+	bool found_first_space = false;
+	size_t first_space_character;
+	for (size_t i = 0; i < strlen(s); i++) {
+		if (s[i] == ' ') {
+			first_space_character = i;
+			found_first_space = true;
+			break;
+		}
+	}
+	if (!found_first_space) {
+		//return given string 's', no space character was found
+		char* token = (char *)malloc((strlen(s) + 1) * sizeof(char));
+		if (token == NULL) {
+			perror("get_first_string_token_space_delimited(): malloc(): error");
+
+			return NULL;
+		}
+
+		token[strlen(s)] = '\0';
+		memcpy(token, s, (strlen(s) * sizeof(char)));
+		return token;
+	}
+	else {
+		char* token = (char *)malloc((first_space_character + 1) * sizeof(char));
+		if (token == NULL) {
+			perror("get_first_string_token_space_delimited(): malloc(): error");
+
+			return NULL;
+		}
+		
+		token[first_space_character] = '\0';
+		memcpy(token, s, (first_space_character * sizeof(char)));
+
+		return token;
+	}
+}
+
+/*
+	void handle_fastq_pair(char* fastq_filename, char* fastq_data, char* query_sequence_identifier, char* query_sequence, int64_t gap_penalty)
+
+	handle_fastq_pair() parses the FASTQ file and writes the results in a pair-wise sequence format (pair).
+*/
+void handle_fastq_pair(char* fastq_filename, char* fastq_data, char* query_sequence_identifier, char* query_sequence, int64_t gap_penalty) {
+	assert(fastq_filename != NULL);
+
+	size_t total_bytes = strlen(fastq_data);
+	size_t current_index = 0;
+
+	uint64_t line_count = 0;
+	size_t last_newline = 0;
+	size_t current_line_length = 0;
+
+	char* sequence_id = NULL;
+	char* sequence = NULL;
+	char* phred_scores = NULL;
+
+	char* sequence_alignment;
+	char* query_sequence_alignment;
+	char* alignment_phred_scores = NULL;
+	size_t alignment_phred_scores_length;
+
+	char* reverse_complement_sequence = get_reverse_complement(query_sequence);
+
+	int64_t smith_waterman_score;
+	int64_t reverse_complement_smith_waterman_score;
+
+	size_t query_sequence_start;
+	size_t query_sequence_stop;
+	size_t sequence_start;
+	size_t sequence_stop;
+
+	//keep track of FASTQ format row as a variable
+	size_t sequence_row;
+
+	char* new_filename = (char *)malloc((strlen(fastq_filename) + 8) * sizeof(char));
+	if (new_filename == NULL) {
+		perror("handle_fastq_pair(): malloc(): error");
+
+		//immediately exit
+		exit(1);
+	}
+
+	//determine new .tsv filename from FASTQ file name
+	memcpy((new_filename + strlen(fastq_filename)), ".sw.pair", (9 * sizeof(char)));
+	memcpy(new_filename, fastq_filename, (strlen(fastq_filename) * sizeof(char)));
+
+	printf("Writing pair-wise sequence alignments to \"%s\"\n", new_filename);
+
+	FILE* file_fd = fopen(new_filename, "wb");
+	if (file_fd == NULL) {
+		perror("handle_fastq_pair(): fopen(): error");
+
+		//immediately exit
+		exit(2);
+	}
+
+	//free filename string allocation
+	free(new_filename);
+
+	//start measuring time between sequences
+	struct timespec start_time;
+	struct timespec current_time;
+	double time_elapsed;
+
+	char* alignment_pair = NULL;
+
+	char* query_sequence_id_token = get_first_string_token_space_delimited(query_sequence_identifier);
+	assert(query_sequence_id_token != NULL);
+
+	size_t reverse_complement_query_sequence_identifier_length = 19 + strlen(query_sequence_id_token);
+	char* reverse_complement_query_sequence_identifier = (char *)malloc((20 + strlen(query_sequence_id_token)) * sizeof(char));
+	if (reverse_complement_query_sequence_identifier == NULL) {
+		perror("handle_fastq_pair(): malloc(): error");
+
+		//immediately exit
+		exit(1);
+	}
+
+	memcpy(reverse_complement_query_sequence_identifier, ">Reverse_Complement_", (20 * sizeof(char)));
+	memcpy(reverse_complement_query_sequence_identifier + 20, (query_sequence_id_token + 1), ((strlen(query_sequence_id_token) - 1) * sizeof(char)));
+	reverse_complement_query_sequence_identifier[reverse_complement_query_sequence_identifier_length] = '\0';
+
+	//free query sequence identifier token string allocation
+	free(query_sequence_id_token);
+
+	assert(clock_gettime(CLOCK_MONOTONIC, &start_time) == 0);
+
+	while (current_index < total_bytes) {
+		if (fastq_data[current_index] == '\n') {
+			line_count++;
+			current_line_length = current_index - last_newline;
+			last_newline = current_index + 1;
+
+			sequence_row = line_count % 4;
+			if (sequence_row == 1) {
+				//FASTQ sequence identifier
+				sequence_id = extract_line(fastq_data, current_index, current_line_length);
+			}
+			else if (sequence_row == 2) {
+				//FASTQ sequence
+				sequence = extract_line(fastq_data, current_index, current_line_length);
+			}
+			else if (sequence_row == 0) {
+				//FASTQ quality scores
+				phred_scores = extract_line(fastq_data, current_index, current_line_length);
+
+				//run Smith-Waterman algorithm with linear gap
+				smith_waterman_score = get_linear_gap_smith_waterman_score(query_sequence, sequence, &sequence_alignment, &query_sequence_alignment, &query_sequence_start, &sequence_start, &query_sequence_stop, &sequence_stop, gap_penalty);
+
+				//format the sequence alignment output before writing to file
+				alignment_pair = generate_int_linear_gap_penalty_pair_alignment("ednafull_linear_smith_waterman", "NUC.4.4", query_sequence_identifier, sequence_id, query_sequence_alignment, sequence_alignment, smith_waterman_score, gap_penalty);
+
+				fprintf(file_fd, "%s", alignment_pair);
+				if(ferror(file_fd)) {
+					perror("handle_fastq_pair(): fprintf(): error");
+			
+					fclose(file_fd);
+			
+					//immediately exit
+					exit(2);
+				}
+
+				//free pair-wise sequence alignment C string allocation
+				free(alignment_pair);
+
+				//flush the file stream
+				fflush(file_fd);
+
+				//free sequence alignment string allocations
+				free(sequence_alignment);
+				free(query_sequence_alignment);
+
+				//prevent double free() calls by assigning freed memory pointers to NULL
+				alignment_pair = NULL;
+				sequence_alignment = NULL;
+				query_sequence_alignment = NULL;
+
+				//compute the reverse complement sequence alignment
+				reverse_complement_smith_waterman_score = get_linear_gap_smith_waterman_score(reverse_complement_sequence, sequence, &sequence_alignment, &query_sequence_alignment, &query_sequence_start, &sequence_start, &query_sequence_stop, &sequence_stop, gap_penalty);
+
+				//format the sequence alignment output before writing to file
+				alignment_pair = generate_int_linear_gap_penalty_pair_alignment("ednafull_linear_smith_waterman", "NUC.4.4", reverse_complement_query_sequence_identifier, sequence_id, query_sequence_alignment, sequence_alignment, reverse_complement_smith_waterman_score, gap_penalty);
+
+				fprintf(file_fd, "%s", alignment_pair);
+				if(ferror(file_fd)) {
+					perror("handle_fastq_pair(): fprintf(): error");
+			
+					fclose(file_fd);
+				
+					//immediately exit
+					exit(2);
+				}
+
+				//flush the file stream
+				fflush(file_fd);
+
+				//free pair-wise sequence alignment C string allocation
+				free(alignment_pair);
+
+				//free sequence alignment string allocations
+				free(sequence_alignment);
+				free(query_sequence_alignment);
+
+				//prevent double free() calls by assigning freed memory pointers to NULL
+				alignment_pair = NULL;
+				sequence_alignment = NULL;
+				query_sequence_alignment = NULL;
+
+				//free memory allocations until next sequence
+				free(phred_scores);
+				free(sequence);
+				free(sequence_id);
+
+				//don't call free() twice
+				phred_scores = NULL;
+				sequence = NULL;
+				sequence_id = NULL;
+
+				if (!(line_count & 0x03ff)) {
+					//checkpoint after (1024 / 4) = 256 sequences
+					assert(clock_gettime(CLOCK_MONOTONIC, &current_time) == 0);
+					time_elapsed = compute_time_elapsed(&start_time, &current_time);
+		
+					printf("[%11.2lf seconds]: %lld sequences parsed\n", time_elapsed, line_count >> 2);
+				}
+			}
+			//else {}//ignore the third line
+		}
+		current_index++;
+	}
+
+	//close file descriptor
+	fclose(file_fd);
+
+	//free C string allocations
+	free(reverse_complement_sequence);
+	free(reverse_complement_query_sequence_identifier);
+
+	//checkpoint after finishing parsing
+	assert(clock_gettime(CLOCK_MONOTONIC, &current_time) == 0);
+	time_elapsed = compute_time_elapsed(&start_time, &current_time);
+	
+	printf("[%11.2lf seconds]: %lld sequences parsed\n", time_elapsed, line_count >> 2);
+
+	return;
+}
+
+/*
 	parse_ednafull_linear_smith_waterman_options(int argc, char* argv[], char** query_sequence, char** sequence, int64_t* gap_penalty)
 
 	parse_ednafull_linear_smith_waterman_options() parses the application's given arguments. This function returns 0 when no
 	problems were encountered during parsing. Otherwise, parse_ednafull_linear_smith_waterman_options() returns 1 on failure.
 */
-static int parse_ednafull_linear_smith_waterman_options(int argc, char* argv[], char** query_sequence, char** sequence, int64_t* gap_penalty) {
+static int parse_ednafull_linear_smith_waterman_options(int argc, char* argv[], char** query_sequence, char** sequence, int64_t* gap_penalty, unsigned int* output_flag) {
 	int getopt_index = 0;
 	int c;
 
@@ -554,8 +802,23 @@ static int parse_ednafull_linear_smith_waterman_options(int argc, char* argv[], 
 
 	while ((c = getopt_long(argc, argv, "q:P:hv", getopt_long_options, &getopt_index)) != -1) {
 		switch (c) {
+			case 0:
+				if (strcmp(getopt_long_options[getopt_index].name, "type") == 0) {
+					if (strcmp(optarg, "tsv") == 0) {
+						*output_flag = OUTPUT_TSV;
+					}
+					else if (strcmp(optarg, "pair") == 0) {
+						*output_flag = OUTPUT_PAIR;
+					}
+					else {
+						printf("ednafull_linear_smith_waterman: option --type: valid types are 'tsv' and 'pair'.\n");
+						printf("Try 'ednafull_linear_smith_waterman --help' for more information.\n");
+						return 1;
+					}
+				}
+				break;
 			case 'q':
-				//printf("assigning query_sequence_filename\n");
+				//check if query file name is an empty string
 				if (strlen(optarg) == 0) {
 					printf("ednafull_linear_smith_waterman: option -q, --query: FASTA query file name cannot be an empty string.\n");
 					printf("Try 'ednafull_linear_smith_waterman --help' for more information.\n");
@@ -599,7 +862,9 @@ static int parse_ednafull_linear_smith_waterman_options(int argc, char* argv[], 
 				}
 				break;
 			default:
-				printf("unsure: %c\n", c);
+				printf("ednafull_linear_smith_waterman: unexpected option: %c\n", c);
+				printf("Try 'ednafull_linear_smith_waterman --help' for more information.\n");
+				return 2;
 				break;
 		}
 	}
@@ -632,8 +897,9 @@ int main(int argc, char* argv[]) {
 	int64_t gap_penalty = 16;
 	char* sequence_filename;
 	char* query_sequence_filename;
+	int output_flag;
 
-	int parse_status = parse_ednafull_linear_smith_waterman_options(argc, argv, &query_sequence_filename, &sequence_filename, &gap_penalty);
+	int parse_status = parse_ednafull_linear_smith_waterman_options(argc, argv, &query_sequence_filename, &sequence_filename, &gap_penalty, &output_flag);
 	
 	if (parse_status == 0) {
 		char* fasta_sequence_identifier = NULL;
@@ -650,8 +916,25 @@ int main(int argc, char* argv[]) {
 		printf("Query Sequence Identifier: %s\n", (fasta_sequence_identifier + 1));
 
 		char* data = read_file(sequence_filename);
-		handle_fastq(sequence_filename, data, fasta_sequence_identifier, query, gap_penalty);
+		if (output_flag == OUTPUT_TSV) {
+			handle_fastq_tsv(sequence_filename, data, fasta_sequence_identifier, query, gap_penalty);
+		}
+		else if (output_flag == OUTPUT_PAIR) {
+			handle_fastq_pair(sequence_filename, data, fasta_sequence_identifier, query, gap_penalty);
+		}
+		else {
+			printf("error: no output type found!\n");
 
+			//free allocations
+			free(data);
+			free(query);
+			free(fasta_data);
+			free(fasta_sequence_identifier);
+
+			return 1;
+		}
+
+		//free allocations
 		free(data);
 		free(query);
 		free(fasta_data);

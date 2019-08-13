@@ -126,7 +126,7 @@ static void count_mismatches(char* trace_X, char* trace_Y, uint64_t* identical, 
 }
 
 /*
-	generate_int_linear_gap_penalty_pair_alignment(char* substitution_matrix_name, char* query_sequence_identifier, char* sequence_identifier, char* trace_X, char* trace_Y, int64_t score, int64_t gap_penalty)
+	generate_int_linear_gap_penalty_pair_alignment(char* program_name, char* substitution_matrix_name, char* query_sequence_identifier, char* sequence_identifier, char* trace_X, char* trace_Y, int64_t score, int64_t gap_penalty)
 	
 	generate_int_linear_gap_penalty_pair_alignment() returns a formatted pair alignment as a newly allocated C string. The function assumes the alignment's
 	linear gap penalty is an integer value.
@@ -136,7 +136,11 @@ static void count_mismatches(char* trace_X, char* trace_Y, uint64_t* identical, 
 	The length of the returned C string was computed using the following numbers:
 
 	Start of Header
-	41 + 43 + 37 + 22 + 41 + 41 = (3 x 41) + (43 + 37) + 22 = 123 + 80 + 22 = 123 + 102 = 225
+	41 + 13 + strlen(program_name) + 37 + 22 + 41 + 41
+	= (3 x 41) + (13 + 37) + 22 + strlen(program_name)
+	= 123 + 50 + 22 + strlen(program_name)
+	= 123 + 72 + strlen(program_name)
+	= 195 + strlen(program_name)
 	
 	Aligned Sequence Names
 	(2 + 23 + 5 + strlen(sequence_id_token + 1) + 1) + (5 + strlen(query_sequence_id_token + 1) + 1)
@@ -179,8 +183,8 @@ static void count_mismatches(char* trace_X, char* trace_Y, uint64_t* identical, 
 	Null Character
 	1
 */
-char* generate_int_linear_gap_penalty_pair_alignment(char* substitution_matrix_name, char* query_sequence_identifier, char* sequence_identifier, char* trace_X, char* trace_Y, int64_t score, int64_t gap_penalty) {
-	assert((trace_X != NULL) && (trace_Y != NULL) && (substitution_matrix_name != NULL));
+char* generate_int_linear_gap_penalty_pair_alignment(char* program_name, char* substitution_matrix_name, char* query_sequence_identifier, char* sequence_identifier, char* trace_X, char* trace_Y, int64_t score, int64_t gap_penalty) {
+	assert((trace_X != NULL) && (trace_Y != NULL) && (substitution_matrix_name != NULL) && (program_name != NULL));
 	assert(strlen(trace_X) == strlen(trace_Y));
 
 	//get the first string token from sequence identifier
@@ -200,7 +204,7 @@ char* generate_int_linear_gap_penalty_pair_alignment(char* substitution_matrix_n
 	uint64_t alignment_remaining = alignment_length % 50;
 
 	char* pair_allocation = (char *)malloc(
-		(225
+		(195 + strlen(program_name)
 		+ 37 + strlen(sequence_id_token + 1) + strlen(query_sequence_id_token + 1)
 		+ 11 + strlen(substitution_matrix_name)
 		+ 112
@@ -257,11 +261,12 @@ char* generate_int_linear_gap_penalty_pair_alignment(char* substitution_matrix_n
 	//start of header
 	bytes_written = sprintf(pair_allocation,
 			"########################################\n"					//41
-			"# Program:  ednafull_linear_smith_waterman\n"					//43
+			"# Program:  %s\n"												//13 + strlen(program_name)
 			"# Rundate:  %s\n"												//12 + 24 + 1 = 37
 			"# Report_file: stdout\n"										//22
 			"########################################\n"					//41
-			"#=======================================\n", time_string);		//41
+			"#=======================================\n",					//41
+ 			program_name, time_string);
 
 	total_bytes_formatted = total_bytes_formatted + bytes_written;
 
@@ -528,6 +533,6 @@ char* generate_int_linear_gap_penalty_pair_alignment(char* substitution_matrix_n
 	free(query_sequence_id_token);
 	free(sequence_id_token);
     free(time_string);
-    
+
 	return pair_allocation;
 }
