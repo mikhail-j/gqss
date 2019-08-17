@@ -966,9 +966,10 @@ int main(int argc, char* argv[]) {
 	int parse_status = parse_ednafull_linear_smith_waterman_options(argc, argv, &query_sequence_filename, &sequence_filename, &gap_penalty, &output_flag);
 	
 	if (parse_status == 0) {
-		char* fasta_sequence_identifier = NULL;
+		char* fasta_sequence_identifier;
+		char* query;
 		char* fasta_data = read_file(query_sequence_filename);
-		char* query = extract_query_sequence(fasta_data, &fasta_sequence_identifier);
+		size_t fasta_bytes_parsed = extract_fasta_sequence(fasta_data, &fasta_sequence_identifier, &query);
 		if (query == NULL) {
 			printf("error: failed to read FASTA query sequence!\n");
 

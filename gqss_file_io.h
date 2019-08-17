@@ -22,6 +22,7 @@
 
 #include <stdlib.h>
 #include <string.h>
+#include <stdbool.h>
 
 #include <errno.h>
 #include <stdio.h>
@@ -35,7 +36,10 @@ char* read_file(char* filename);
 //extract_line() returns NULL on failure
 char* extract_line(char* data, size_t idx, size_t line_length);
 
+//compute the length of the first FASTA sequence in 'fasta_data'
+size_t get_length_fasta_sequence(char* fasta_data);
+
 //extract first FASTA sequence in 'fasta_data'
-char* extract_query_sequence(char* fasta_data, char** fasta_sequence_identifier);
+size_t extract_fasta_sequence(char* fasta_data, char** fasta_sequence_identifier, char** sequence);
 
 #endif /* GQSS_FILE_IO_H */
